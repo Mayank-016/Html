@@ -1,153 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Movie Search App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Movie Search App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
 
-        h1 {
-            text-align: center;
-        }
+    h1 {
+      text-align: center;
+    }
 
-        #search-form {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+    #search-form {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-        #search-input {
-            padding: 10px;
-            width: 300px;
-            font-size: 16px;
-        }
+    #search-input {
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+    }
 
-        #results-container {
-            display: flex;
-            gap: 20px;
-        }
+    #results-container {
+      display: flex;
+      gap: 20px;
+    }
 
-        #movies {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-            flex: 2;
-        }
+    #movies {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      flex: 2;
+    }
 
-        .movie-card {
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
+    .movie-card {
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
 
-        .movie-card:hover {
-            transform: scale(1.02);
-        }
+    .movie-card:hover {
+      transform: scale(1.02);
+    }
 
-        .movie-card img {
-            width: 100%;
-            height: 270px;
-            object-fit: cover;
-        }
+    .movie-card img {
+      width: 100%;
+      height: 270px;
+      object-fit: cover;
+    }
 
-        #movie-details {
-            flex: 1;
-            padding: 20px;
-            background: #fff;
-            border-radius: 5px;
-            height: fit-content;
-        }
+    #movie-details {
+      flex: 1;
+      padding: 20px;
+      background: #fff;
+      border-radius: 5px;
+      height: fit-content;
+    }
 
-        #movie-details h2 {
-            margin-top: 0;
-        }
+    #movie-details h2 {
+      margin-top: 0;
+    }
 
-        @media (max-width: 768px) {
-            #results-container {
-                flex-direction: column;
-            }
-        }
-    </style>
+    @media (max-width: 768px) {
+      #results-container {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
-
 <body>
-    <h1>🎬 Movie Search App</h1>
+  <h1>🎬 Movie Search App</h1>
 
-    <div id="search-form">
-        <input type="text" id="search-input" placeholder="Search for a movie..." oninput="debouncedSearch()" />
-    </div>
+  <div id="search-form">
+    <input
+      type="text"
+      id="search-input"
+      placeholder="Search for a movie..."
+      oninput="debouncedSearch()"
+    />
+  </div>
 
-    <div id="results-container">
-        <div id="movies"></div>
-        <div id="movie-details">
-            <p>Select a movie to see details</p>
-        </div>
-    </div>
+  <div id="results-container">
+    <div id="movies"></div>
+    <div id="movie-details"><p>Select a movie to see details</p></div>
+  </div>
 
-    <script>
-        const API_KEY = '5bba5654';
+  <script>
+    const API_KEY = '5bba5654';
+    let debounceTimeout;
 
-        let debounceTimeout;
+    function debouncedSearch() {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(searchMovies, 400);
+    }
 
-        function debouncedSearch() {
-            clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(searchMovies, 400);
+    async function searchMovies(query = null) {
+      if (!query) {
+        query = document.getElementById('search-input').value.trim();
+      }
+
+      const moviesContainer = document.getElementById('movies');
+      const details = document.getElementById('movie-details');
+      moviesContainer.innerHTML = '';
+      details.innerHTML = '<p>Select a movie to see details</p>';
+
+        if (!query) {
+            return searchMovies('Avengers'); // Reload default if input is cleared
         }
 
-        async function searchMovies() {
-            const query = document.getElementById('search-input').value.trim();
-            if (!query) {
-                document.getElementById('movies').innerHTML = '';
-                document.getElementById('movie-details').innerHTML = '<p>Select a movie to see details</p>';
-                return;
-            }
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(query)}`);
+      const data = await res.json();
 
-            const res = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(query)}`);
-            const data = await res.json();
-
-            const moviesContainer = document.getElementById('movies');
-            moviesContainer.innerHTML = '';
-            document.getElementById('movie-details').innerHTML = '<p>Select a movie to see details</p>';
-
-            if (data.Response === "True") {
-                data.Search.forEach(movie => {
-                    const movieCard = document.createElement('div');
-                    movieCard.className = 'movie-card';
-                    movieCard.innerHTML = `
+      if (data.Response === "True") {
+        data.Search.slice(0, 10).forEach(movie => {
+          const movieCard = document.createElement('div');
+          movieCard.className = 'movie-card';
+          movieCard.innerHTML = `
             <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/180x270?text=No+Image'}" />
             <h4>${movie.Title}</h4>
             <p>(${movie.Year})</p>
           `;
-                    movieCard.onclick = () => showMovieDetails(movie.imdbID);
-                    moviesContainer.appendChild(movieCard);
-                });
-            } else {
-                moviesContainer.innerHTML = `<p>No results found for "${query}".</p>`;
-            }
-        }
+          movieCard.onclick = () => showMovieDetails(movie.imdbID);
+          moviesContainer.appendChild(movieCard);
+        });
+      } else {
+        moviesContainer.innerHTML = `<p>No results found for "${query}".</p>`;
+      }
+    }
 
-        async function showMovieDetails(imdbID) {
-            const res = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&i=${imdbID}&plot=full`);
-            const movie = await res.json();
+    async function showMovieDetails(imdbID) {
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&i=${imdbID}&plot=full`);
+      const movie = await res.json();
 
-            const details = document.getElementById('movie-details');
-            details.innerHTML = `
+      const details = document.getElementById('movie-details');
+      details.innerHTML = `
         <h2>${movie.Title} (${movie.Year})</h2>
         <p><strong>Actors:</strong> ${movie.Actors}</p>
         <p><strong>Genre:</strong> ${movie.Genre}</p>
         <p><strong>Plot:</strong> ${movie.Plot}</p>
         <p><strong>IMDB Rating:</strong> ${movie.imdbRating}</p>
       `;
-        }
-    </script>
-</body>
+    }
 
+    // Load initial 10 movies
+    window.onload = () => {
+      searchMovies('Avengers'); // You can change this default query to anything like "Batman"
+    };
+  </script>
+</body>
 </html>
